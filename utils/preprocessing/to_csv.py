@@ -1,3 +1,6 @@
+"""Module used to write train, validation and test csv files in RETINANET
+friendly format from raw data"""
+
 import os
 import xml.etree.ElementTree as elemTree
 import pandas as pd
@@ -22,31 +25,21 @@ def create_metadata_csv_retinanet():
             if file.endswith(JPG_SUFFIX):
 
                 file_location = os.path.join(root, file)
+                base_row = [file_location]
 
                 xml_file = file.replace(JPG_SUFFIX, XML_SUFFIX)
-                base_row = [file_location]
-                if xml_file in files:
-                    xml_file_location = os.path.join(root, xml_file)
-                    parsed_file = elemTree.parse(xml_file_location)
-                    objects_in_xml = parsed_file.findall(OBJECT_COLUMN)
-                    for object in objects_in_xml:
-                        base_row = [file_location]
-                        base_row += _parse_objects(object)
-                        data.append(base_row)
 
+                if xml_file in files:
+                    objects_in_xml = _get_objects_in_xml(root, xml_file)
+                    for object_node in objects_in_xml:
+                        data.append(base_row + _parse_objects(object_node))
                 else:
                     data.append(base_row)
 
-    data_df = pd.DataFrame(data)
-    data_df.columns = PARSED_DATAFRAME_COLUMNS
+    data_df = pd.DataFrame(data, columns=PARSED_DATAFRAME_COLUMNS)
     data_df.fillna('', inplace=True)
 
-    train_val_test_sets = train_val_test_split(data_df)
-
-    for set_name, dataset in train_val_test_sets.items():
-        for_csv_df = dataset[ANNOTATIONS_COLUMNS_RETINA_FORMAT]
-        for_csv_df.to_csv('{}_retina_format.csv'.format(set_name),
-                          header=False, index=False)
+    _write_subset_csvs(data_df)
 
 
 def _parse_objects(object_node):
@@ -58,6 +51,21 @@ def _parse_objects(object_node):
     ymax = bound_box.find(YMAX_COLUMN).text
 
     return [xmin, ymin, xmax, ymax, object_name]
+
+
+def _get_objects_in_xml(root_dir, xml_file_path):
+    xml_file_location = os.path.join(root_dir, xml_file_path)
+    parsed_file = elemTree.parse(xml_file_location)
+    return parsed_file.findall(OBJECT_COLUMN)
+
+
+def _write_subset_csvs(dataset):
+    train_val_test_sets = train_val_test_split(dataset)
+
+    for set_name, subset in train_val_test_sets.items():
+        for_csv_df = subset[ANNOTATIONS_COLUMNS_RETINA_FORMAT]
+        for_csv_df.to_csv('{}_retina_format.csv'.format(set_name),
+                          header=False, index=False)
 
 
 def train_val_test_split(arrays, val_test_size=0.15):
