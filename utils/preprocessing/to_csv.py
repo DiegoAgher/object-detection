@@ -22,15 +22,23 @@ def create_metadata_csv_retinanet():
             if file.endswith(JPG_SUFFIX):
 
                 file_location = os.path.join(root, file)
-                base_row = [file_location]
 
                 xml_file = file.replace(JPG_SUFFIX, XML_SUFFIX)
+                base_row = [file_location]
                 if xml_file in files:
-                    base_row.append(_parse_objects(root, xml_file))
+                    xml_file_location = os.path.join(root, xml_file)
+                    parsed_file = elemTree.parse(xml_file_location)
+                    objects_in_xml = parsed_file.findall(OBJECT_COLUMN)
+                    for object in objects_in_xml:
+                        base_row = [file_location]
+                        base_row += _parse_objects(object)
+                        data.append(base_row)
 
-                data.append(base_row)
+                else:
+                    data.append(base_row)
 
-    data_df = pd.DataFrame(data, columns=PARSED_DATAFRAME_COLUMNS)
+    data_df = pd.DataFrame(data)
+    data_df.columns = PARSED_DATAFRAME_COLUMNS
     data_df.fillna('', inplace=True)
 
     train_val_test_sets = train_val_test_split(data_df)
@@ -41,21 +49,15 @@ def create_metadata_csv_retinanet():
                           header=False, index=False)
 
 
-def _parse_objects(root_dir, xml_file):
-    xml_file_location = os.path.join(root_dir, xml_file)
-    parsed_file = elemTree.parse(xml_file_location)
+def _parse_objects(object_node):
+    object_name = object_node.find('name').text
+    bound_box = object_node.find('bndbox')
+    xmin = bound_box.find(XMIN_COLUMN).text
+    xmax = bound_box.find(XMAX_COLUMN).text
+    ymin = bound_box.find(YMIN_COLUMN).text
+    ymax = bound_box.find(YMAX_COLUMN).text
 
-    objects_in_xml = parsed_file.findall(OBJECT_COLUMN)
-
-    for object_node in objects_in_xml:
-        object_name = object_node.find('name').text
-        bound_box = object_node.find('bndbox')
-        xmin = bound_box.find(XMIN_COLUMN).text
-        xmax = bound_box.find(XMAX_COLUMN).text
-        ymin = bound_box.find(YMIN_COLUMN).text
-        ymax = bound_box.find(YMAX_COLUMN).text
-
-        return [xmin, ymin, xmax, ymax, object_name]
+    return [xmin, ymin, xmax, ymax, object_name]
 
 
 def train_val_test_split(arrays, val_test_size=0.15):
@@ -78,3 +80,6 @@ def train_val_test_split(arrays, val_test_size=0.15):
     sets_dictionary['test'] = test
 
     return sets_dictionary
+
+if __name__ == '__main__':
+    create_metadata_csv_retinanet()
