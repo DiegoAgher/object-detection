@@ -64,8 +64,9 @@ def _write_subset_csvs(dataset):
 
     for set_name, subset in train_val_test_sets.items():
         for_csv_df = subset[ANNOTATIONS_COLUMNS_RETINA_FORMAT]
-        for_csv_df.to_csv('{}_retina_format.csv'.format(set_name),
-                          header=False, index=False)
+        csv_name = '{}_retina_format.csv'.format(set_name)
+        print("Writing csv file {}".format(csv_name))
+        for_csv_df.to_csv(csv_name, header=False, index=False)
 
 
 def train_val_test_split(arrays, val_test_size=0.15):
