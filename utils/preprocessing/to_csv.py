@@ -16,8 +16,21 @@ def create_metadata_csv_retinanet():
     """
     Writes train, validation and test csv files with RETINANET format
     """
+
+    data_df = get_full_dataset_as_dataframe(DATA_DIRECTORY)
+    data_df = _filter_and_clean_data(data_df)
+    _write_subset_csvs(data_df)
+
+
+def get_full_dataset_as_dataframe(dataset_path):
+    """
+    Gathers full dataset's metadata
+    :param dataset_path: string with path to data as files in .jpg and .xml
+    formats
+    :return: pandas DataFrame
+    """
     data = []
-    for root, _, files in os.walk(DATA_DIRECTORY):
+    for root, _, files in os.walk(dataset_path):
         valid_files = [file for file in files
                        if not file.endswith('.DS_Store')]
 
@@ -35,12 +48,14 @@ def create_metadata_csv_retinanet():
                         data.append(base_row + _parse_objects(object_node))
                 else:
                     data.append(base_row)
-    data_df = pd.DataFrame(data, columns=PARSED_DATAFRAME_COLUMNS)
-    data_df.loc[data_df[OBJECT_COLUMN] == 'hie', OBJECT_COLUMN] = 'hoe'
-    data_df.fillna('', inplace=True)
-    data_df = data_df[data_df[OBJECT_COLUMN].isin(['body', 'hoe', 'wheels'])]
 
-    _write_subset_csvs(data_df)
+    return pd.DataFrame(data, columns=PARSED_DATAFRAME_COLUMNS)
+
+
+def _filter_and_clean_data(dataframe):
+    dataframe.loc[dataframe[OBJECT_COLUMN] == 'hie', OBJECT_COLUMN] = 'hoe'
+    dataframe.fillna('', inplace=True)
+    return dataframe[dataframe[OBJECT_COLUMN].isin(['body', 'hoe', 'wheels'])]
 
 
 def _parse_objects(object_node):
