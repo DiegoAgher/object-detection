@@ -35,9 +35,10 @@ def create_metadata_csv_retinanet():
                         data.append(base_row + _parse_objects(object_node))
                 else:
                     data.append(base_row)
-
     data_df = pd.DataFrame(data, columns=PARSED_DATAFRAME_COLUMNS)
+    data_df.loc[data_df[OBJECT_COLUMN] == 'hie', OBJECT_COLUMN] = 'hoe'
     data_df.fillna('', inplace=True)
+    data_df = data_df[data_df[OBJECT_COLUMN].isin(['body', 'hoe', 'wheels'])]
 
     _write_subset_csvs(data_df)
 
