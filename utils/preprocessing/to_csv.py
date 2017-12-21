@@ -55,7 +55,8 @@ def get_full_dataset_as_dataframe(dataset_path):
 def _filter_and_clean_data(dataframe):
     dataframe.loc[dataframe[OBJECT_COLUMN] == 'hie', OBJECT_COLUMN] = 'hoe'
     dataframe.fillna('', inplace=True)
-    return dataframe[dataframe[OBJECT_COLUMN].isin(['body', 'hoe', 'wheels'])]
+    return dataframe[dataframe[OBJECT_COLUMN].isin(['body', 'hoe', 'wheels',
+                                                    ''])]
 
 
 def _parse_objects(object_node):
