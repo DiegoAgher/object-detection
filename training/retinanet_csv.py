@@ -1,3 +1,4 @@
+"""Script used to train RetinaNet model providing params from command line"""
 import argparse
 import os
 import keras
@@ -13,17 +14,22 @@ from keras_retinanet.\
 from keras_retinanet.\
     keras_retinanet.models.resnet import ResNet50RetinaNet
 
-from training.constants import DESCRIPTION_TRAIN_PARSER
+from training.constants import DESCRIPTION_TRAIN_PARSER, MODEL_CHECKPOINT_PATH
 
 
 def create_models(num_classes):
-    # create "base" model (no NMS)
+    """
+    Builds compiled Retinanet using ReNet50 for object detection
+    :param num_classes: number of classes to possibly detect
+    :return: base model (model), training and inference model
+    """
+
     image = keras.layers.Input((None, None, 3))
     model = ResNet50RetinaNet(image, num_classes=num_classes,
                               weights='imagenet', nms=False)
     training_model = model
 
-    # append NMS for prediction only
+    # include Non Max Supression layer for prediction model only
     classification = model.outputs[1]
     detections = model.outputs[2]
     boxes = keras.layers.Lambda(lambda x: x[:, :, :4])(detections)
@@ -45,8 +51,7 @@ def create_models(num_classes):
     return model, training_model, prediction_model
 
 
-def create_callbacks(model, training_model, prediction_model,
-                     validation_generator, args):
+def _create_callbacks(prediction_model, args):
     callbacks = []
 
     # save the prediction model
@@ -54,7 +59,8 @@ def create_callbacks(model, training_model, prediction_model,
         checkpoint = keras.callbacks.ModelCheckpoint(
             os.path.join(
                 args.snapshot_path,
-                'resnet50_csv_test.h5'
+                MODEL_CHECKPOINT_PATH.format(args.steps, args.epoch),
+                save_best_only=True
             ),
             verbose=1
         )
@@ -71,6 +77,12 @@ def create_callbacks(model, training_model, prediction_model,
 
 
 def create_generators(args):
+    """
+    Instances train and validation CSV ImageData Generators, data augmentation
+    for vertical and horizontal flipping is set automatically.
+    :param args: parsed arguments from command line
+    :return: train and validations generators
+    """
     train_image_data_generator = (image_preprocessing.
                                   ImageDataGenerator(vertical_flip=True,
                                                      horizontal_flip=True))
@@ -96,13 +108,14 @@ def create_generators(args):
     return train_generator, validation_generator
 
 
-def parse_args(args):
+def _parse_args(args):
+
     csv_parser = argparse.ArgumentParser(description=DESCRIPTION_TRAIN_PARSER)
 
-    csv_parser.add_argument('annotations',
+    csv_parser.add_argument('--annotations',
                             help='Path to CSV file containing annotations for '
                                  'training.')
-    csv_parser.add_argument('classes',
+    csv_parser.add_argument('--classes',
                             help='Path to CSV file containing class label '
                                  'mapping.')
     csv_parser.add_argument('--val-annotations',
@@ -110,7 +123,7 @@ def parse_args(args):
                                  'validation (optional).')
 
     csv_parser.add_argument('--batch-size',
-                            help='Size of the batches.', default=1, type=int)
+                            help='Size of the batches.', default=10, type=int)
     csv_parser.add_argument('--epochs',
                             help='Number of epochs to train.',
                             type=int, default=5)
@@ -120,7 +133,7 @@ def parse_args(args):
     csv_parser.add_argument('--snapshot-path',
                             help='Path to store snapshots of models during '
                                  'training (defaults to \'./snapshots\')',
-                            default='./snapshots')
+                            default='keras_retinanet/snapshots')
     csv_parser.add_argument('--no-snapshots',
                             help='Disable saving snapshots.', dest='snapshots',
                             action='store_false')
@@ -129,14 +142,16 @@ def parse_args(args):
     return csv_parser.parse_args(args)
 
 
-def get_session():
+def _get_session():
     config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
     return tf.Session(config=config)
 
 
-def main(args=None):
+def _main(args=None):
 
+    args = _parse_args(args)
+
+    keras.backend.tensorflow_backend.set_session(_get_session())
     train_generator, validation_generator = create_generators(args)
 
     print('Creating model, this may take a second...')
@@ -145,19 +160,15 @@ def main(args=None):
 
     print(model.summary())
 
-    callbacks = create_callbacks(
-        model,
-        training_model,
-        prediction_model,
-        validation_generator,
-        args)
+    callbacks = _create_callbacks(prediction_model, args)
 
     training_model.fit_generator(
         generator=train_generator,
         steps_per_epoch=args.steps,
         epochs=args.epochs,
         verbose=1,
-        callbacks=callbacks)
+        callbacks=callbacks,
+        validation_data=validation_generator)
 
 if __name__ == '__main__':
-    main()
+    _main()
