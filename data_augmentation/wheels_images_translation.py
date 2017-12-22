@@ -30,6 +30,7 @@ for row_index, row in wheels_data.iterrows():
     new_image_row.columns = ANNOTATIONS_COLUMNS_RETINA_FORMAT
     train = train.append(new_image_row)
 
+train.fillna('', inplace=True)
 
 for col in NUMERIC_COLUMNS:
     train[col] = train[col].astype(str)
