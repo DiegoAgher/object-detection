@@ -1,7 +1,23 @@
 import numpy as np
+import cv2
 
-from utils.preprocessing.constants import XMIN_COLUMN, YMIN_COLUMN,\
-    XMAX_COLUMN, YMAX_COLUMN
+from utils.preprocessing.constants import FILE_LOCATION_COLUMN, XMIN_COLUMN,\
+    YMIN_COLUMN, XMAX_COLUMN, YMAX_COLUMN
+
+
+def get_image_and_bounding_box(image_metadata):
+    image_path = image_metadata[FILE_LOCATION_COLUMN]
+    image_array = cv2.imread(image_path)
+    xmin, xmax, ymin, ymax = get_bound_box(image_metadata)
+    return image_array, xmin, xmax, ymin, ymax
+
+
+def randomly_translate_image(image_array, xmin, xmax, ymin, ymax):
+    translation_matrix, xmin, xmax, ymin, ymax = \
+        get_random_translation(image_array, xmin, xmax, ymin, ymax)
+    rows, columns, _ = image_array.shape
+
+    return cv2.warpAffine(image_array, translation_matrix, (columns, rows))
 
 
 def get_random_translation(image_array, xmin, xmax, ymin, ymax):

@@ -1,7 +1,9 @@
+"""Script used to augment data for wheels class for training RetinaNet """
 import pandas as pd
 import cv2
 
-from data_augmentation.utils import get_bound_box, get_random_translation
+from data_augmentation.utils import get_image_and_bounding_box,\
+    randomly_translate_image
 from utils.preprocessing.constants import ANNOTATIONS_COLUMNS_RETINA_FORMAT,\
     FILE_LOCATION_COLUMN, OBJECT_COLUMN, WHEELS_COLUMN, NUMERIC_COLUMNS
 
@@ -29,21 +31,6 @@ def _augment_object_data_by_translation(train_dataframe, class_column):
                                         bounding_box, class_column)
 
     return train_dataframe
-
-
-def get_image_and_bounding_box(image_metadata):
-    image_path = image_metadata[FILE_LOCATION_COLUMN]
-    image_array = cv2.imread(image_path)
-    xmin, xmax, ymin, ymax = get_bound_box(image_metadata)
-    return image_array, xmin, xmax, ymin, ymax
-
-
-def randomly_translate_image(image_array, xmin, xmax, ymin, ymax):
-    translation_matrix, xmin, xmax, ymin, ymax = \
-        get_random_translation(image_array, xmin, xmax, ymin, ymax)
-    rows, columns, _ = image_array.shape
-
-    return cv2.warpAffine(image_array, translation_matrix, (columns, rows))
 
 
 def _write_translated_image(image_metadata, translated_image):
@@ -78,4 +65,3 @@ def _main():
 
 if __name__ == '__main__':
     _main()
-
