@@ -1,4 +1,5 @@
 """Script used to train RetinaNet model providing params from command line"""
+import sys
 import argparse
 import os
 import keras
@@ -59,9 +60,9 @@ def _create_callbacks(prediction_model, args):
         checkpoint = keras.callbacks.ModelCheckpoint(
             os.path.join(
                 args.snapshot_path,
-                MODEL_CHECKPOINT_PATH.format(args.steps, args.epoch),
-                save_best_only=True
+                MODEL_CHECKPOINT_PATH.format(args.steps, args.epochs)
             ),
+            save_best_only=True,
             verbose=1
         )
         checkpoint = RedirectModel(checkpoint, prediction_model)
@@ -148,7 +149,8 @@ def _get_session():
 
 
 def _main(args=None):
-
+    if args is None:
+        args = sys.argv[1:]
     args = _parse_args(args)
 
     keras.backend.tensorflow_backend.set_session(_get_session())
@@ -168,7 +170,8 @@ def _main(args=None):
         epochs=args.epochs,
         verbose=1,
         callbacks=callbacks,
-        validation_data=validation_generator)
+        validation_data=validation_generator,
+        validation_steps=50)
 
 if __name__ == '__main__':
     _main()
