@@ -53,6 +53,12 @@ def get_full_dataset_as_dataframe(dataset_path):
 
 
 def _filter_and_clean_data(dataframe):
+    dataframe = dataframe[dataframe[XMIN_COLUMN]
+                          != dataframe[XMAX_COLUMN]]
+
+    dataframe = dataframe[dataframe[YMIN_COLUMN]
+                          != dataframe[YMAX_COLUMN]]
+
     dataframe.loc[dataframe[OBJECT_COLUMN] == 'hie', OBJECT_COLUMN] = 'hoe'
     dataframe.fillna('', inplace=True)
     return dataframe[dataframe[OBJECT_COLUMN].isin(['body', 'hoe', 'wheels',
