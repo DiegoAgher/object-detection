@@ -10,12 +10,12 @@ def get_random_translation(image_array, xmin, xmax, ymin, ymax):
     if is_horizontal_translation:
         return get_random_horizontal_translation_matrix(image_array,
                                                         xmin, xmax)
-    else:
-        return get_random_vertical_translation_matrix(image_array, ymin, ymax)
+
+    return get_random_vertical_translation_matrix(image_array, ymin, ymax)
 
 
 def get_random_horizontal_translation_matrix(image_array, xmin, xmax):
-    rows, columns, _ = image_array.shape
+    columns = image_array.shape[1]
     is_left_translation = np.random.randint(0, 2, 1) > 0
     rand_translation = np.random.randint(0, columns - xmax, 1)
     if is_left_translation:
@@ -25,9 +25,8 @@ def get_random_horizontal_translation_matrix(image_array, xmin, xmax):
 
 
 def get_random_vertical_translation_matrix(image_array, ymin, ymax):
-    rows, columns, _ = image_array.shape
+    rows = image_array.shape[0]
     is_up_translation = np.random.randint(0, 2, 1) > 0
-    print("up") if is_up_translation else print("down")
     rand_translation = np.random.randint(0, rows - ymax, 1)
     if is_up_translation:
         rand_translation = -1 * np.random.randint(0, ymin, 1)
