@@ -70,7 +70,6 @@ def _main():
     train = _augment_object_data_by_translation(train, WHEELS_COLUMN)
 
     train.fillna('', inplace=True)
-
     for col in NUMERIC_COLUMNS:
         train[col] = train[col].astype(str)
 
