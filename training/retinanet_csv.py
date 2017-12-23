@@ -58,13 +58,9 @@ def _create_callbacks(prediction_model, args):
     # save the prediction model
     if args.snapshots:
         checkpoint = keras.callbacks.ModelCheckpoint(
-            os.path.join(
-                args.snapshot_path,
-                MODEL_CHECKPOINT_PATH.format(args.steps, args.epochs)
-            ),
-            save_best_only=True,
-            verbose=1
-        )
+                MODEL_CHECKPOINT_PATH.format(args.steps, args.epochs),
+                save_best_only=True,
+                verbose=1)
         checkpoint = RedirectModel(checkpoint, prediction_model)
         callbacks.append(checkpoint)
 
@@ -171,7 +167,7 @@ def _main(args=None):
         verbose=1,
         callbacks=callbacks,
         validation_data=validation_generator,
-        validation_steps=50)
+        validation_steps=5)
 
 if __name__ == '__main__':
     _main()
