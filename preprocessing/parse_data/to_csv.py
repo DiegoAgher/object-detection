@@ -6,9 +6,9 @@ import xml.etree.ElementTree as elemTree
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from utils.preprocessing.constants import ANNOTATIONS_COLUMNS_RETINA_FORMAT,\
+from utils_d.preprocessing.constants import ANNOTATIONS_COLUMNS_RETINA_FORMAT,\
     DATA_DIRECTORY, JPG_SUFFIX, PARSED_DATAFRAME_COLUMNS, XML_SUFFIX
-from utils.preprocessing.constants import XMIN_COLUMN, YMIN_COLUMN,\
+from utils_d.preprocessing.constants import XMIN_COLUMN, YMIN_COLUMN,\
     XMAX_COLUMN, YMAX_COLUMN, OBJECT_COLUMN
 
 
@@ -32,7 +32,7 @@ def get_full_dataset_as_dataframe(dataset_path):
     data = []
     for root, _, files in os.walk(dataset_path):
         valid_files = [file for file in files
-                       if not file.endswith('.DS_Store')]
+                       if "_t." not in file or not file.endswith('.DS_Store')]
 
         for file in valid_files:
             if file.endswith(JPG_SUFFIX):
@@ -58,6 +58,7 @@ def _filter_and_clean_data(dataframe):
 
     dataframe = dataframe[dataframe[YMIN_COLUMN]
                           != dataframe[YMAX_COLUMN]]
+    dataframe = dataframe[dataframe.file_location.apply(lambda x: "_t." not in x)]
 
     dataframe.loc[dataframe[OBJECT_COLUMN] == 'hie', OBJECT_COLUMN] = 'hoe'
     dataframe.fillna('', inplace=True)
@@ -92,7 +93,7 @@ def _write_subset_csvs(dataset):
         for_csv_df.to_csv(csv_name, header=False, index=False)
 
 
-def train_val_test_split(arrays, val_test_size=0.15):
+def train_val_test_split(arrays, val_test_size=0.10):
     """ Splits dataframe into train, validation and test subsets
 
     :param arrays: from sklearn doc:

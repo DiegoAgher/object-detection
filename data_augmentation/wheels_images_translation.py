@@ -4,31 +4,31 @@ import cv2
 
 from data_augmentation.utils import get_image_and_bounding_box,\
     randomly_translate_image
-from utils.preprocessing.constants import ANNOTATIONS_COLUMNS_RETINA_FORMAT,\
+from preprocessing.parse_data.constants import ANNOTATIONS_COLUMNS_RETINA_FORMAT,\
     FILE_LOCATION_COLUMN, OBJECT_COLUMN, WHEELS_COLUMN, NUMERIC_COLUMNS
 
 
 def _augment_object_data_by_translation(train_dataframe, class_column):
     class_data = \
         train_dataframe[train_dataframe[OBJECT_COLUMN] == class_column].copy()
-
+    #augmented_data = []
     for row_index, sample_metadata in class_data.iterrows():
         if row_index % 100 == 0:
             print("Augmenting row {}".format(row_index))
 
-        image_array, xmin, xmax, ymin, ymax = \
+        image_array, xmin, ymin, xmax, ymax = \
             get_image_and_bounding_box(sample_metadata)
 
-        translated_image = randomly_translate_image(image_array, xmin,
-                                                    xmax, ymin, ymax)
-        bounding_box = [xmin, xmax, ymin, ymax]
+        translated_image, xmin_t, ymin_t, xmax_t, ymax_t =\
+            randomly_translate_image(image_array, xmin, ymin, xmax, ymax)
+        translated_bounding_box = [xmin_t, ymin_t, xmax_t, ymax_t]
 
         translated_image_path = \
             _write_translated_image(sample_metadata, translated_image)
 
         train_dataframe = \
             _append_translated_metadata(train_dataframe, translated_image_path,
-                                        bounding_box, class_column)
+                                        translated_bounding_box, class_column)
 
     return train_dataframe
 
@@ -59,6 +59,7 @@ def _main():
     train.fillna('', inplace=True)
     for col in NUMERIC_COLUMNS:
         train[col] = train[col].astype(str)
+        train[col] = train[col].apply(lambda x: x.replace(".0", ''))
 
     train.to_csv('train_retina_format_augmented.csv', header=None, index=False)
 

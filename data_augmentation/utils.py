@@ -2,7 +2,7 @@
 import numpy as np
 import cv2
 
-from utils.preprocessing.constants import FILE_LOCATION_COLUMN, XMIN_COLUMN,\
+from preprocessing.parse_data.constants import FILE_LOCATION_COLUMN, XMIN_COLUMN,\
     YMIN_COLUMN, XMAX_COLUMN, YMAX_COLUMN
 
 
@@ -10,16 +10,16 @@ def get_image_and_bounding_box(image_metadata):
     """
     Uses image metadata to read the image and obtain bounding box
     :param image_metadata: panda DataFrame row with corresponding attributes:
-            - file_location, xmin, xmax, ymin, ymax
+            - file_location, xmin, ymin, xmax, ymax
     :return: tuple with image_array and separate bounding box
     """
     image_path = image_metadata[FILE_LOCATION_COLUMN]
     image_array = cv2.imread(image_path)
-    xmin, xmax, ymin, ymax = get_bound_box(image_metadata)
-    return image_array, xmin, xmax, ymin, ymax
+    xmin, ymin, xmax, ymax = get_bound_box(image_metadata)
+    return image_array, xmin, ymin, xmax, ymax
 
 
-def randomly_translate_image(image_array, xmin, xmax, ymin, ymax):
+def randomly_translate_image(image_array, xmin, ymin, xmax, ymax):
     """
     Performs either a vertical or horizontal translation of an image
     :param image_array: np.array usually coming the output of an imread method
@@ -29,14 +29,17 @@ def randomly_translate_image(image_array, xmin, xmax, ymin, ymax):
     :param ymax: int
     :return: np.array representing the translated image
     """
-    translation_matrix, xmin, xmax, ymin, ymax = \
-        get_random_translation(image_array, xmin, xmax, ymin, ymax)
+    translation_matrix, xmin, ymin, xmax, ymax = \
+        get_random_translation(image_array, xmin, ymin, xmax, ymax)
+
     rows, columns, _ = image_array.shape
+    translated_image = cv2.warpAffine(image_array, translation_matrix,
+                                      (columns, rows))
 
-    return cv2.warpAffine(image_array, translation_matrix, (columns, rows))
+    return translated_image, xmin, ymin, xmax, ymax
 
 
-def get_random_translation(image_array, xmin, xmax, ymin, ymax):
+def get_random_translation(image_array, xmin, ymin, xmax, ymax):
     """
     Wrapper for random horizontal or vertical translation
     :param image_array: np.array usually coming the output of an imread method
@@ -56,7 +59,7 @@ def get_random_translation(image_array, xmin, xmax, ymin, ymax):
         translation_matrix, ymin, ymax = \
             random_vertical_translation(image_array, ymin, ymax)
 
-    return translation_matrix, xmin, xmax, ymin, ymax
+    return translation_matrix, xmin, ymin, xmax, ymax
 
 
 def random_horizontal_translation(image_array, xmin, xmax):
@@ -108,8 +111,8 @@ def get_bound_box(df_row):
     """
     Wrapper to quickly get bounding box of per coordinate
     :param df_row: pandas DataFrame row with corresponding attributes:
-            - xmin, xmax, ymin, ymax
+            - xmin, ymin, xmax, ymax
     :return: tuple of ints defining the bounding box
     """
-    return int(df_row[XMIN_COLUMN]), int(df_row[XMAX_COLUMN]),\
-           int(df_row[YMIN_COLUMN]), int(df_row[YMAX_COLUMN])
+    return int(df_row[XMIN_COLUMN]), int(df_row[YMIN_COLUMN]),\
+           int(df_row[XMAX_COLUMN]), int(df_row[YMAX_COLUMN])
