@@ -6,9 +6,9 @@ import xml.etree.ElementTree as elemTree
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from utils_d.preprocessing.constants import ANNOTATIONS_COLUMNS_RETINA_FORMAT,\
+from preprocessing.parse_data.constants import ANNOTATIONS_COLUMNS_RETINA_FORMAT,\
     DATA_DIRECTORY, JPG_SUFFIX, PARSED_DATAFRAME_COLUMNS, XML_SUFFIX
-from utils_d.preprocessing.constants import XMIN_COLUMN, YMIN_COLUMN,\
+from preprocessing.parse_data.constants import XMIN_COLUMN, YMIN_COLUMN,\
     XMAX_COLUMN, YMAX_COLUMN, OBJECT_COLUMN
 
 
