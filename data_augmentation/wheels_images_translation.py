@@ -11,7 +11,6 @@ from preprocessing.parse_data.constants import ANNOTATIONS_COLUMNS_RETINA_FORMAT
 def _augment_object_data_by_translation(train_dataframe, class_column):
     class_data = \
         train_dataframe[train_dataframe[OBJECT_COLUMN] == class_column].copy()
-    #augmented_data = []
     for row_index, sample_metadata in class_data.iterrows():
         if row_index % 100 == 0:
             print("Augmenting row {}".format(row_index))

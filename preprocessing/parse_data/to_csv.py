@@ -58,10 +58,15 @@ def _filter_and_clean_data(dataframe):
 
     dataframe = dataframe[dataframe[YMIN_COLUMN]
                           != dataframe[YMAX_COLUMN]]
-    dataframe = dataframe[dataframe.file_location.apply(lambda x: "_t." not in x)]
+    dataframe = dataframe[dataframe.file_location.apply(lambda x: "_t." not in
+                                                                  x)]
 
     dataframe.loc[dataframe[OBJECT_COLUMN] == 'hie', OBJECT_COLUMN] = 'hoe'
     dataframe.fillna('', inplace=True)
+    negative_samples = dataframe.query(
+        '{} == ""'.format(OBJECT_COLUMN)).sample(frac=0.9)
+    dataframe.drop(negative_samples.index, inplace=True)
+
     return dataframe[dataframe[OBJECT_COLUMN].isin(['body', 'hoe', 'wheels',
                                                     ''])]
 
