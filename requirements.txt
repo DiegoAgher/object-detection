@@ -1,0 +1,7 @@
+cv2 == 3.3.1
+numpy
+pandas
+matplotlib
+Pillow
+six
+keras==2.1.2
