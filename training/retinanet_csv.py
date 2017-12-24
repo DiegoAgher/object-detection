@@ -120,7 +120,7 @@ def _parse_args(args):
                                  'validation (optional).')
 
     csv_parser.add_argument('--batch-size',
-                            help='Size of the batches.', default=32, type=int)
+                            help='Size of the batches.', default=1, type=int)
     csv_parser.add_argument('--epochs',
                             help='Number of epochs to train.',
                             type=int, default=5)

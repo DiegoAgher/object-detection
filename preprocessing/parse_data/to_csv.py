@@ -46,8 +46,6 @@ def get_full_dataset_as_dataframe(dataset_path):
                     objects_in_xml = _get_objects_in_xml(root, xml_file)
                     for object_node in objects_in_xml:
                         data.append(base_row + _parse_objects(object_node))
-                else:
-                    data.append(base_row)
 
     return pd.DataFrame(data, columns=PARSED_DATAFRAME_COLUMNS)
 
@@ -63,9 +61,6 @@ def _filter_and_clean_data(dataframe):
 
     dataframe.loc[dataframe[OBJECT_COLUMN] == 'hie', OBJECT_COLUMN] = 'hoe'
     dataframe.fillna('', inplace=True)
-    negative_samples = dataframe.query(
-        '{} == ""'.format(OBJECT_COLUMN)).sample(frac=0.97)
-    dataframe.drop(negative_samples.index, inplace=True)
 
     return dataframe[dataframe[OBJECT_COLUMN].isin(['body', 'hoe', 'wheels',
                                                     ''])]
