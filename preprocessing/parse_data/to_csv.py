@@ -31,6 +31,8 @@ def get_full_dataset_as_dataframe(dataset_path):
     """
     data = []
     for root, _, files in os.walk(dataset_path):
+
+        # Ignore posible augmented files by excluding files with "_t" ending
         valid_files = [file for file in files
                        if "_t." not in file or not file.endswith('.DS_Store')]
 
@@ -56,8 +58,6 @@ def _filter_and_clean_data(dataframe):
 
     dataframe = dataframe[dataframe[YMIN_COLUMN]
                           != dataframe[YMAX_COLUMN]]
-    dataframe = dataframe[dataframe.file_location.apply(lambda x: "_t." not in
-                                                                  x)]
 
     dataframe.loc[dataframe[OBJECT_COLUMN] == 'hie', OBJECT_COLUMN] = 'hoe'
     dataframe.fillna('', inplace=True)
