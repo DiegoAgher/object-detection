@@ -1,7 +1,6 @@
 """Script used to train RetinaNet model providing params from command line"""
 import sys
 import argparse
-import os
 import keras
 import keras.preprocessing.image as image_preprocessing
 import tensorflow as tf
@@ -57,7 +56,8 @@ def _create_callbacks(prediction_model, args):
 
     # save the prediction model
     if args.snapshots:
-        checkpoint = keras.callbacks.ModelCheckpoint(
+        checkpoint =\
+            keras.callbacks.ModelCheckpoint(
                 MODEL_CHECKPOINT_PATH.format(args.steps, args.epochs),
                 save_best_only=True,
                 verbose=1)
