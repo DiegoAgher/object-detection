@@ -55,8 +55,9 @@ class ObjectDetectionModel(object):
         image = self.data_generator.load_image(self._index)
         draw = image.copy()
         draw = cv2.cvtColor(draw, cv2.COLOR_BGR2RGB)
+        annotations = self.data_generator.load_annotations(self._index)
         self._index += 1
-        return image, draw, self.data_generator.load_annotations(self._index)
+        return image, draw, annotations
 
     def _rescale_image(self, image):
         image = self.data_generator.preprocess_image(image)
