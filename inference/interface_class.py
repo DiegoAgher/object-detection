@@ -2,6 +2,7 @@
 detection"""
 import cv2
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import keras.preprocessing as K_preprocessing
 from keras.models import load_model
@@ -9,7 +10,10 @@ from keras_retinanet.keras_retinanet.models.resnet import custom_objects
 from keras_retinanet.keras_retinanet.preprocessing.csv_generator \
     import CSVGenerator
 from inference.constants import NUMBER_OF_POINTS_IN_BOUNDING_BOX, XMIN_COORD, \
-    XMAX_COORD, YMIN_COORD, YMAX_COORD
+    XMAX_COORD, YMIN_COORD, YMAX_COORD, SCORE_THRESHOLD
+from inference.utils import draw_caption
+from preprocessing.parse_data.constants import \
+    ANNOTATIONS_COLUMNS_RETINA_FORMAT
 
 
 class ObjectDetectionModel(object):
@@ -28,10 +32,11 @@ class ObjectDetectionModel(object):
         self._index = 0
 
     def _build_generator(self):
+        data_path = self.test_data_path
         image_data_generator = K_preprocessing.image.ImageDataGenerator()
-        return CSVGenerator(self.test_data_path, self.classes_path,
+        return CSVGenerator(data_path, self.classes_path,
                             image_data_generator,
-                            batch_size=10)
+                            batch_size=32)
 
     def generate_image_and_prediction(self, threshold=0.5):
         """
@@ -74,6 +79,7 @@ class ObjectDetectionModel(object):
         scores = detections[0,
                             np.arange(detections.shape[1]),
                             NUMBER_OF_POINTS_IN_BOUNDING_BOX + predicted_labels]
+
         detections[0, :, :NUMBER_OF_POINTS_IN_BOUNDING_BOX] /= scale
         return scores, detections, predicted_labels
 
@@ -110,7 +116,7 @@ class ObjectDetectionModel(object):
 
         caption = "{} {:.3f}".format(self.data_generator.label_to_name(label),
                                      score)
-        self._draw_caption(draw, caption, bounding_box)
+        draw_caption(draw, caption, bounding_box)
 
     def _draw_annotations(self, draw, annotation):
         label = int(annotation[4])
@@ -126,13 +132,51 @@ class ObjectDetectionModel(object):
 
         caption = "{}".format(self.data_generator.label_to_name(label))
 
-        self._draw_caption(draw, caption, annotation_coords)
+        draw_caption(draw, caption, annotation_coords)
 
-    def _draw_caption(self, draw, caption, bounding_box):
-        cv2.putText(draw, caption,
-                    (bounding_box[XMIN_COORD], bounding_box[YMIN_COORD] - 10),
-                    cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 0, 0), 3)
+    def predict_dataset(self):
+        """
+        Predicts all samples in dataset provided in self.test_data_path and
+        writes a CSV file with predictions.
+        :return:
+        """
+        dataset_prediction = []
+        for index, image_location in enumerate(
+                self.data_generator.image_data.keys()):
 
-        cv2.putText(draw, caption,
-                    (bounding_box[XMIN_COORD], bounding_box[YMIN_COORD] - 10),
-                    cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 255), 2)
+            if index % 200 == 0:
+                print("predicting image {}".format(index))
+
+            image = self.data_generator.load_image(index)
+            image, scale = self._rescale_image(image)
+            scores, detections, predicted_labels = self._get_predictions(
+                image, scale)
+
+            for prediction_id, (label, score) in enumerate(
+                    zip(predicted_labels, scores)):
+
+                sample_row = [image_location]
+                if score >= SCORE_THRESHOLD:
+                    sample_row =\
+                        self._build_prediction_row(sample_row, prediction_id,
+                                                   label, detections)
+
+                dataset_prediction.append(sample_row)
+
+        dataset_prediction = pd.DataFrame(
+            dataset_prediction, columns=ANNOTATIONS_COLUMNS_RETINA_FORMAT)
+
+        dataset_prediction.to_csv(
+            'inference/predictions.csv'.format(self.model_checkpoint_path),
+            header=False, index=False)
+
+    def _build_prediction_row(self, row, prediction_id, label,
+                              detections):
+
+        bounding_box =\
+            (detections[0, prediction_id, :NUMBER_OF_POINTS_IN_BOUNDING_BOX].
+             astype(int))
+        label_str = self.data_generator.label_to_name(label)
+        row.extend(bounding_box)
+        row.append(label_str)
+        return row
