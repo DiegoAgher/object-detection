@@ -8,6 +8,8 @@ from keras.models import load_model
 from keras_retinanet.keras_retinanet.models.resnet import custom_objects
 from keras_retinanet.keras_retinanet.preprocessing.csv_generator \
     import CSVGenerator
+from inference.constants import NUMBER_OF_POINTS_IN_BOUNDING_BOX, XMIN_COORD, \
+    XMAX_COORD, YMIN_COORD, YMAX_COORD
 
 
 class ObjectDetectionModel(object):
@@ -65,10 +67,14 @@ class ObjectDetectionModel(object):
 
     def _get_predictions(self, image, scale):
         _, _, detections = self.model.predict(np.expand_dims(image, axis=0))
-        predicted_labels = np.argmax(detections[0, :, 4:], axis=1)
-        scores = detections[0, np.arange(detections.shape[1]),
-                            4 + predicted_labels]
-        detections[0, :, :4] /= scale
+
+        predicted_labels = np.argmax(
+            detections[0, :, NUMBER_OF_POINTS_IN_BOUNDING_BOX:], axis=1)
+
+        scores = detections[0,
+                            np.arange(detections.shape[1]),
+                            NUMBER_OF_POINTS_IN_BOUNDING_BOX + predicted_labels]
+        detections[0, :, :NUMBER_OF_POINTS_IN_BOUNDING_BOX] /= scale
         return scores, detections, predicted_labels
 
     def _draw_annotations_and_predictions(self, draw, annotations,
@@ -92,31 +98,41 @@ class ObjectDetectionModel(object):
 
     def _draw_predicted_labels_and_scores(self, draw, detections,
                                           prediction_id, label, score):
-        current_detection = detections[0, prediction_id, :4].astype(int)
-        cv2.rectangle(draw, (current_detection[0], current_detection[1]),
-                      (current_detection[2], current_detection[3]),
+
+        bounding_box = (detections[0, prediction_id,
+                                   :NUMBER_OF_POINTS_IN_BOUNDING_BOX].
+                        astype(int))
+
+        cv2.rectangle(draw,
+                      (bounding_box[XMIN_COORD], bounding_box[YMIN_COORD]),
+                      (bounding_box[XMAX_COORD], bounding_box[YMAX_COORD]),
                       (0, 0, 255), 3)
 
-        caption = "{} {:.3f}".format(
-            self.data_generator.label_to_name(label), score)
-        cv2.putText(draw, caption,
-                    (current_detection[0], current_detection[1] - 10),
-                    cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 0, 0), 3)
-        cv2.putText(draw, caption,
-                    (current_detection[0], current_detection[1] - 10),
-                    cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 255), 2)
+        caption = "{} {:.3f}".format(self.data_generator.label_to_name(label),
+                                     score)
+        self._draw_caption(draw, caption, bounding_box)
 
     def _draw_annotations(self, draw, annotation):
         label = int(annotation[4])
-        annotation_coords = annotation[:4].astype(int)
-        cv2.rectangle(draw, (annotation_coords[0], annotation_coords[1]),
-                      (annotation_coords[2], annotation_coords[3]),
+        annotation_coords = (annotation[:NUMBER_OF_POINTS_IN_BOUNDING_BOX].
+                             astype(int))
+
+        cv2.rectangle(draw,
+                      (annotation_coords[XMIN_COORD],
+                       annotation_coords[YMIN_COORD]),
+                      (annotation_coords[XMAX_COORD],
+                       annotation_coords[YMAX_COORD]),
                       (0, 255, 0), 2)
 
         caption = "{}".format(self.data_generator.label_to_name(label))
+
+        self._draw_caption(draw, caption, annotation_coords)
+
+    def _draw_caption(self, draw, caption, bounding_box):
         cv2.putText(draw, caption,
-                    (annotation_coords[0], annotation_coords[1] - 10),
+                    (bounding_box[XMIN_COORD], bounding_box[YMIN_COORD] - 10),
                     cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 0, 0), 3)
+
         cv2.putText(draw, caption,
-                    (annotation_coords[0], annotation_coords[1] - 10),
+                    (bounding_box[XMIN_COORD], bounding_box[YMIN_COORD] - 10),
                     cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 255), 2)
