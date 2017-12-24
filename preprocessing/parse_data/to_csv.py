@@ -64,7 +64,7 @@ def _filter_and_clean_data(dataframe):
     dataframe.loc[dataframe[OBJECT_COLUMN] == 'hie', OBJECT_COLUMN] = 'hoe'
     dataframe.fillna('', inplace=True)
     negative_samples = dataframe.query(
-        '{} == ""'.format(OBJECT_COLUMN)).sample(frac=0.9)
+        '{} == ""'.format(OBJECT_COLUMN)).sample(frac=0.97)
     dataframe.drop(negative_samples.index, inplace=True)
 
     return dataframe[dataframe[OBJECT_COLUMN].isin(['body', 'hoe', 'wheels',
