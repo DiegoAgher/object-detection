@@ -13,4 +13,6 @@ cd ..
 git clone https://github.com/DiegoAgher/object-detection.git
 cd object-detection
 pip install -r requirements.txt
-cd ..
+cd training/models_weights/
+wget https://www.dropbox.com/s/2snae87k61qagfa/resnet50_csv_1200_10_continuation.h5
+cd ../..
