@@ -68,7 +68,7 @@ class ObjectDetectionModel(object):
 
     def _update_index(self):
         self._index += 1
-        if self._index > self.data_size:
+        if self._index > self.data_size - 1:
             self._index = 0
 
     def _rescale_image(self, image):
