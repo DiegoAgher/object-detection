@@ -3,7 +3,7 @@ Object detection with deep learning models
 
 # Docker build
 In order to build the Docker container, first clone this repo.
-After, run the following from the command line `docker build -t obj_rec --no-cache .` This could take some minutes depeding on the internet speed. In the end, a message of successful building should be displayed.
+After, run the following from the command line `docker build -t obj_rec --no-cache .` This could take some minutes depeding on the internet speed. A message of successful building should be displayed after the process is finished.
 
 After a successful build, run the following to launch a Jupyter instance to explore the model: `docker run -p 8888:8888 obj_rec`
 
