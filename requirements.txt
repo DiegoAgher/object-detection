@@ -4,4 +4,5 @@ matplotlib
 Pillow
 six
 keras==2.1.2
-h5py==2.7.1 
+h5py==2.7.1
+sklearn
