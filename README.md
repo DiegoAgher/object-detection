@@ -2,8 +2,10 @@
 Object detection with deep learning models
 
 # Docker build
-docker build -t obj_rec --no-cache .
-docker run -p 8888:8888 obj_rec
+In order to build the Docker container, first clone this repo.
+After, run the following from the command line `docker build -t obj_rec --no-cache .` This could take some minutes depeding on the internet speed. In the end, a message of successful building should be displayed.
+
+After a successful build, run the following to launch a Jupyter instance to explore the model: `docker run -p 8888:8888 obj_rec`
 
 # Inferencing
-After building docker open a browser to acces jupyter notebook. The notebook `Inferencing.ipynb` has the interface to do inference.
+Once Docker is running, open a browser to access Jupyter using the link provided on terminal incluiding the token. The notebook `Inferencing.ipynb` inside the `object_detection` directory contains an example of how to use the interface to do inference.
