@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import keras.preprocessing as K_preprocessing
+import keras.preprocessing.image as image_preprocessing
 from keras.models import load_model
 from keras_retinanet.keras_retinanet.models.resnet import custom_objects
 from keras_retinanet.keras_retinanet.preprocessing.csv_generator \
@@ -33,7 +33,7 @@ class ObjectDetectionModel(object):
 
     def _build_generator(self):
         data_path = self.test_data_path
-        image_data_generator = K_preprocessing.image.ImageDataGenerator()
+        image_data_generator = image_preprocessing.ImageDataGenerator()
         return CSVGenerator(data_path, self.classes_path,
                             image_data_generator,
                             batch_size=32)
