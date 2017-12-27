@@ -16,3 +16,4 @@ pip install -r requirements.txt
 cd training/models_weights/
 wget https://www.dropbox.com/s/2snae87k61qagfa/resnet50_csv_1200_10_continuation.h5
 cd ../..
+python -m preprocessing.parse_data.to_csv
